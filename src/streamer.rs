@@ -6,6 +6,7 @@ use std::{
     thread,
 };
 
+use crate::line_buffer::LineReader;
 use crate::messages::Message;
 
 type Callback<T> = dyn Fn(T) + Send + Sync + 'static;
@@ -17,6 +18,8 @@ where
 {
     actions: HashMap<T::MessageType, Arc<Callback<T>>>,
     threads: Arc<(Mutex<u32>, Condvar)>,
+
+    line_buffer: Box<dyn LineReader + Send + Sync + 'static>,
 }
 
 impl<T> Streamer<T>
@@ -24,10 +27,15 @@ where
     T: Message + Send + ToString + 'static,
     T::MessageType: Hash + Eq,
 {
-    pub fn new(conc: u32) -> Streamer<T> {
+    pub fn new<LB>(buff: LB, conc: u32) -> Streamer<T>
+    where
+        LB: LineReader + Send + Sync + 'static,
+    {
         Streamer {
             actions: HashMap::new(),
             threads: Arc::new((Mutex::new(conc), Condvar::new())),
+
+            line_buffer: Box::new(buff),
         }
     }
 
@@ -72,6 +80,27 @@ where
             });
         } else {
             func(msg);
+        }
+    }
+
+    pub fn loop_action(&mut self) {
+        let threaded: bool = {
+            let (mtx, _) = &*self.threads;
+            *(mtx.lock().unwrap()) > 0
+        };
+
+        loop {
+            let s: String = match self.line_buffer.read_line() {
+                Some(s) => s,
+                None => continue,
+            };
+
+            let msg = match T::parse(&s) {
+                Some(m) => m,
+                None => continue,
+            };
+
+            self.do_action(msg, threaded);
         }
     }
 }

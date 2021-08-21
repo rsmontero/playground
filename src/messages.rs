@@ -94,7 +94,10 @@ where
             match DriverMessage::<T, B64, TSTP>::read_word(&mut cursor, &mut token)
                 .and_then(|s: &str| s.parse::<i64>().ok())
             {
-                Some(s) => s,
+                Some(s) => {
+                    token.clear();
+                    s
+                }
                 None => return None,
             }
         } else {
@@ -113,7 +116,10 @@ where
         }
 
         if B64 {
-            py = match decode(py).ok().and_then(|v| String::from_utf8(v).ok()) {
+            py = match decode(py.trim())
+                .ok()
+                .and_then(|v| String::from_utf8(v).ok())
+            {
                 Some(s) => String::from(s),
                 None => return None,
             }
@@ -144,16 +150,18 @@ where
     where
         B: AsRef<[u8]>,
     {
-        let u = match cursor.read_until(b' ', token) {
-            Ok(u) => u,
-            Err(_) => return None,
-        };
+        loop {
+            match cursor.read_until(b' ', token) {
+                Ok(u) => match u {
+                    0 => return None, //End Of Cursor
+                    1 => (),          //' '
+                    _ => return from_utf8(&token[..u - 1]).ok(),
+                },
+                Err(_) => return None,
+            };
 
-        if u <= 1 {
-            return None;
+            token.clear();
         }
-
-        from_utf8(&token[..u - 1]).ok()
     }
 }
 

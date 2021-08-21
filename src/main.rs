@@ -1,16 +1,20 @@
+mod line_buffer;
 mod messages;
 mod streamer;
 
-use crate::messages::{APIMessage, APIMessageTypes, Message};
-
-use crate::streamer::Streamer;
+use crate::{
+    line_buffer::LineBuffer,
+    messages::{APIMessage, APIMessageTypes},
+    streamer::Streamer,
+};
 
 use std::{thread, time};
 
 fn main() {
-    let msg = String::from("Red 124 SUCCESS aGVsbG8gd29ybGQ=");
+    //let buffer = LineBuffer::from_stdin();
+    let buffer = LineBuffer::from_path("./test_file").unwrap();
 
-    let mut api_str: Streamer<APIMessage> = Streamer::new(2);
+    let mut api_str: Streamer<APIMessage> = Streamer::new(buffer, 2);
 
     api_str.register_action(APIMessageTypes::Red, |m: APIMessage| {
         let s: String = m.to_string();
@@ -20,16 +24,9 @@ fn main() {
         thread::sleep(time::Duration::from_secs(2));
     });
 
-    let msg1 = APIMessage::parse(&msg).unwrap();
-    api_str.do_action(msg1, true);
-    let msg1 = APIMessage::parse(&msg).unwrap();
-    api_str.do_action(msg1, true);
-    let msg1 = APIMessage::parse(&msg).unwrap();
-    api_str.do_action(msg1, true);
-
-    let msg2 = String::from("Yellow 124 SUCCESS aGVsbG8gd29ybGQ=");
-
-    api_str.do_action(APIMessage::parse(&msg2).unwrap(), true);
-
-    thread::sleep(time::Duration::from_secs(3));
+    thread::spawn(move || {
+        api_str.loop_action();
+    })
+    .join()
+    .unwrap();
 }
