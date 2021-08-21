@@ -1,37 +1,35 @@
-mod listener;
 mod messages;
+mod streamer;
 
 use crate::messages::{APIMessage, APIMessageTypes, Message};
 
-use crate::listener::Streamer;
+use crate::streamer::Streamer;
 
-use std::{
-    collections::HashMap,
-    thread,
-    time
-};
+use std::{thread, time};
 
 fn main() {
-    let msg1 = String::from("Red 124 SUCCESS aGVsbG8gd29ybGQ=");
+    let msg = String::from("Red 124 SUCCESS aGVsbG8gd29ybGQ=");
 
-    let msg1 = APIMessage::parse(&msg1).unwrap();
+    let mut api_str: Streamer<APIMessage> = Streamer::new(2);
 
-    println!("{:?}", msg1);
-
-    let mut api_str: Streamer<APIMessage> = Streamer {
-        actions: HashMap::new(),
-    };
-
-    api_str.register(APIMessageTypes::Red, |m: APIMessage| {
+    api_str.register_action(APIMessageTypes::Red, |m: APIMessage| {
         let s: String = m.to_string();
+
         println!("Callback MSG: {}", s);
+
+        thread::sleep(time::Duration::from_secs(2));
     });
 
+    let msg1 = APIMessage::parse(&msg).unwrap();
+    api_str.do_action(msg1, true);
+    let msg1 = APIMessage::parse(&msg).unwrap();
+    api_str.do_action(msg1, true);
+    let msg1 = APIMessage::parse(&msg).unwrap();
     api_str.do_action(msg1, true);
 
     let msg2 = String::from("Yellow 124 SUCCESS aGVsbG8gd29ybGQ=");
 
     api_str.do_action(APIMessage::parse(&msg2).unwrap(), true);
 
-    thread::sleep(time::Duration::from_secs(1));
+    thread::sleep(time::Duration::from_secs(3));
 }
