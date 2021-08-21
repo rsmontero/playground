@@ -7,7 +7,8 @@ use crate::listener::Streamer;
 
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex},
+    thread,
+    time
 };
 
 fn main() {
@@ -31,4 +32,6 @@ fn main() {
     let msg2 = String::from("Yellow 124 SUCCESS aGVsbG8gd29ybGQ=");
 
     api_str.do_action(APIMessage::parse(&msg2).unwrap(), true);
+
+    thread::sleep(time::Duration::from_secs(1));
 }

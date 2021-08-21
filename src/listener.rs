@@ -41,8 +41,6 @@ where
 
         thread::spawn(move || {
             func(msg);
-        })
-        .join()
-        .unwrap();
+        });
     }
 }
