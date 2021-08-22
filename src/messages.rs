@@ -25,15 +25,15 @@ pub struct DriverMessage<T, const B64: bool, const TSTP: bool>
 where
     T: FromStr + ToString,
 {
-    _type: T,
+    mtype: T,
 
-    _oid: i64,
+    oid: i64,
 
-    _status: String,
+    status: String,
 
-    _payload: String,
+    payload: String,
 
-    _timestamp: i64,
+    timestamp: i64,
 }
 
 impl<T, const B64: bool, const TSTP: bool> ToString for DriverMessage<T, B64, TSTP>
@@ -42,10 +42,10 @@ where
 {
     fn to_string(&self) -> String {
         let mut buffer: String =
-            format!("{} {} {} ", self._type.to_string(), self._status, self._oid);
+            format!("{} {} {} ", self.mtype.to_string(), self.status, self.oid);
 
-        if !self._payload.is_empty() {
-            buffer.push_str(&self._payload);
+        if !self.payload.is_empty() {
+            buffer.push_str(&self.payload);
         }
 
         buffer.push('\n');
@@ -62,7 +62,7 @@ where
     type MessageType = T;
 
     fn message_type(&self) -> &Self::MessageType {
-        &self._type
+        &self.mtype
     }
 
     fn parse<B: AsRef<[u8]>>(buffer: &B) -> Option<Self>
@@ -126,11 +126,11 @@ where
         }
 
         Some(DriverMessage {
-            _type: mt,
-            _status: st,
-            _payload: py,
-            _oid: oid,
-            _timestamp: tstp,
+            mtype: mt,
+            status: st,
+            payload: py,
+            oid: oid,
+            timestamp: tstp,
         })
     }
 

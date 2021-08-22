@@ -43,14 +43,8 @@ impl<T: BufRead> LineReader for LineBuffer<T> {
         let mut s = String::new();
 
         match self.reader.read_line(&mut s) {
-            Ok(l) => {
-                if l == 0 {
-                    // TODO deal EOF Result<...> or trait fn
-                    None
-                } else {
-                    Some(s)
-                }
-            }
+            Ok(l) if l == 0 => None, //TODO deal EOF Result<...> or trait fn
+            Ok(_) => Some(s),
             Err(_) => None,
         }
     }
