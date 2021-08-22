@@ -1,17 +1,23 @@
 mod line_buffer;
 mod messages;
 mod streamer;
-
+mod manager;
+/*
 use crate::{
     line_buffer::LineBuffer,
-    messages::{APIMessage, APIMessageTypes},
+    manager::{APIMessage, APIMessageTypes},
     streamer::Streamer,
-};
+};*/
 
-use std::{thread, time};
+use crate::manager::APIManager;
 
 fn main() {
+    let api_manager = APIManager::new();
+
+    api_manager.start().join().unwrap();
+
     //let buffer = LineBuffer::from_stdin();
+    /*
     let buffer = LineBuffer::from_path("./test_file").unwrap();
 
     let mut api_str: Streamer<APIMessage> = Streamer::new(buffer, 2);
@@ -29,4 +35,5 @@ fn main() {
     })
     .join()
     .unwrap();
+    */
 }

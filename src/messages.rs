@@ -1,5 +1,4 @@
 use base64::decode;
-use strum_macros::{Display, EnumString};
 
 use std::convert::AsRef;
 use std::io::{BufRead, Cursor};
@@ -164,12 +163,3 @@ where
         }
     }
 }
-
-#[derive(EnumString, Display, Debug, Eq, PartialEq, Hash)]
-pub enum APIMessageTypes {
-    Red,
-    Blue,
-    Yellow,
-}
-
-pub type APIMessage = DriverMessage<APIMessageTypes, true, false>;
