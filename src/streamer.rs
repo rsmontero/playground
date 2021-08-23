@@ -19,7 +19,7 @@ where
     actions: HashMap<T::MessageType, Arc<Callback<T>>>,
     threads: Arc<(Mutex<u32>, Condvar)>,
 
-    line_buffer: Box<dyn LineReader + Send + Sync + 'static>,
+    line_buffer: Mutex<Box<dyn LineReader + Send + Sync + 'static>>,
 }
 
 impl<T> Streamer<T>
@@ -35,7 +35,7 @@ where
             actions: HashMap::new(),
             threads: Arc::new((Mutex::new(conc), Condvar::new())),
 
-            line_buffer: Box::new(buff),
+            line_buffer: Mutex::new(Box::new(buff)),
         }
     }
 
@@ -83,16 +83,20 @@ where
         }
     }
 
-    pub fn loop_action(&mut self) {
+    pub fn loop_action(&self) {
         let threaded: bool = {
             let (mtx, _) = &*self.threads;
             *(mtx.lock().unwrap()) > 0
         };
 
         loop {
-            let s: String = match self.line_buffer.read_line() {
-                Some(s) => s,
-                None => continue,
+            let s: String = {
+                let mut lb = self.line_buffer.lock().unwrap();
+
+                match lb.read_line() {
+                    Some(s) => s,
+                    None => continue,
+                }
             };
 
             let msg = match T::parse(&s) {

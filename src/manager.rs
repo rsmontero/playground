@@ -73,7 +73,7 @@ pub struct APIManager
 {
     proto: Arc<APIManagerProtocol>,
 
-    streamer: Arc<Mutex<Streamer<APIMessage>>>,
+    streamer: Arc<Streamer<APIMessage>>,
 }
 
 impl APIManager
@@ -102,7 +102,7 @@ impl APIManager
 
         APIManager {
             proto: proto,
-            streamer: Arc::new(Mutex::new(api_str)),
+            streamer: Arc::new(api_str),
         }
     }
 
@@ -110,7 +110,7 @@ impl APIManager
         let _streamer = self.streamer.clone();
 
         thread::spawn(move || {
-            _streamer.lock().unwrap().loop_action();
+            _streamer.loop_action();
         })
     }
 }
